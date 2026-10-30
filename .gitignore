@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+.playwright-mcp/
+*.local
+.env
+.env.*
+!.env.example
+outputs/qa-*.png

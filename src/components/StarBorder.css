@@ -1,0 +1,98 @@
+.star-border-container {
+  display: inline-block;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.star-border-container .border-gradient-bottom,
+.star-border-container .border-gradient-top {
+  position: absolute;
+  width: 300%;
+  height: 50%;
+  opacity: 0.7;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.star-border-container .border-gradient-bottom {
+  bottom: -12px;
+  right: -250%;
+  animation: star-movement-bottom linear infinite alternate;
+}
+
+.star-border-container .border-gradient-top {
+  top: -12px;
+  left: -250%;
+  animation: star-movement-top linear infinite alternate;
+}
+
+.star-border-container .star-border-orbit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star-border-orbit rect {
+  fill: none;
+  stroke-dasharray: 22 28;
+  stroke-linecap: round;
+  animation: star-orbit-clockwise linear infinite;
+}
+
+.star-border-orbit .star-orbit-halo {
+  stroke-width: 9;
+  opacity: .55;
+  filter: blur(5px);
+}
+
+.star-border-orbit .star-orbit-core {
+  stroke-width: 1.5;
+  opacity: .7;
+}
+
+.star-border-container .inner-content {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #222;
+  border-radius: 20px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  z-index: 1;
+}
+
+@keyframes star-movement-bottom {
+  0% { transform: translate(0%, 0%); opacity: 1; }
+  100% { transform: translate(-100%, 0%); opacity: 0; }
+}
+
+@keyframes star-movement-top {
+  0% { transform: translate(0%, 0%); opacity: 1; }
+  100% { transform: translate(100%, 0%); opacity: 0; }
+}
+
+@keyframes star-orbit-clockwise {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -100; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-border-container .border-gradient-bottom,
+  .star-border-container .border-gradient-top {
+    animation: none;
+    opacity: 0.35;
+  }
+  .star-border-orbit rect {
+    animation: none;
+    opacity: .35;
+  }
+}
