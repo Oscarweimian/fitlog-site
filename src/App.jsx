@@ -131,7 +131,7 @@ export function EnergyBar({ segments, total, target }) {
   </>;
 }
 
-function MuscleMap({ training, selectedParts = [], view = 'front', onViewChange }) {
+export function MuscleMap({ training, trainingType, onTrainingChange, selectedParts = [], view = 'front', onViewChange }) {
   const isWholeBody = training.wholeBody;
   const isFitness = training.isFitness;
   const selectedPartNames = selectedParts.map((partId) => fitnessBodyParts.find((part) => part.id === partId)?.name).filter(Boolean);
@@ -144,12 +144,12 @@ function MuscleMap({ training, selectedParts = [], view = 'front', onViewChange 
 
   return (
     <article className={'card anatomy-card' + (isWholeBody ? ' anatomy-card--whole-body' : '') + (isFitness ? ' anatomy-card--fitness' : '')}>
-      <div className="card-heading"><h2>Training Focus</h2><div className="anatomy-heading-actions">{isFitness && availableViews.length > 1 && <span className="anatomy-view-switch"><button className={displayedView === 'front' ? 'active' : ''} type="button" onClick={() => onViewChange('front')}>Front</button><button className={displayedView === 'back' ? 'active' : ''} type="button" onClick={() => onViewChange('back')}>Rear</button></span>}</div></div>
+      <div className="card-heading"><h2>Training Focus</h2><div className="anatomy-heading-actions">{isFitness && availableViews.length > 1 && <span className="anatomy-view-switch"><button className={displayedView === 'front' ? 'active' : ''} type="button" onClick={() => onViewChange('front')}>Front</button><button className={displayedView === 'back' ? 'active' : ''} type="button" onClick={() => onViewChange('back')}>Rear</button></span>}<details className="training-type-menu"><summary aria-label="Change training day" title="Change training day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></summary><div className="training-type-menu__panel" role="group" aria-label="Training day type">{[['Rest','Rest'],['Sports','Sports'],['Fitness','Strength Training']].map(([value,label])=><button key={value} type="button" aria-current={trainingType===value?'true':undefined} onClick={(event)=>{onTrainingChange(value);event.currentTarget.closest('details').open=false;}}>{label}</button>)}</div></details></div></div>
       <div className="anatomy-layout">
         <div className="anatomy-copy">
           <strong>{displayArea}</strong>
           {(!isFitness || selectedPartNames.length > 0) && <p>{isFitness ? `${selectedPartNames.length} muscle ${selectedPartNames.length === 1 ? 'group' : 'groups'} selected. You can add more.` : training.detail}</p>}
-          {!isWholeBody && <small>{isFitness ? (selectedPartNames.length ? <><i /> Highlighted areas show your selected muscles</> : 'Select one or more muscle groups') : <><i /> Highlighted areas show today’s training focus</>}</small>}
+          {isFitness && <small>{selectedPartNames.length ? <><i /> Highlighted areas show your selected muscles</> : 'Select one or more muscle groups'}</small>}
         </div>
         <div className={'anatomy-visual anatomy-visual--' + displayedView + (isWholeBody ? ' anatomy-visual--whole-body' : '') + (isFitness ? ' anatomy-visual--fitness' : '')}>
           <img src={image} alt={isFitness ? 'Full body' + (displayedView === 'front' ? 'Front' : 'Rear') + ' muscle anatomy' : isWholeBody ? 'Full-body athlete illustration' : training.area === 'Rest' ? 'Active recovery on a rest day' : training.area + ' training: ' + (displayedView === 'front' ? 'Front' : 'Rear') + ' muscle anatomy'} />
@@ -471,7 +471,7 @@ function App() {
               <ProfileEditor key={date} profile={profile} onSave={value=>setJournal(j=>({...j,profile:value,days:{...j.days,[date]:{...j.days[date],profile:value}}}))}/>
             </article></GlowPanel>
 
-            <GlowPanel className="anatomy-glow" tone="training"><MuscleMap training={activeTraining} selectedParts={selectedFitnessPartIds} view={anatomyView} onViewChange={setAnatomyView} /></GlowPanel>
+            <GlowPanel className="anatomy-glow" tone="training"><MuscleMap training={activeTraining} trainingType={training} onTrainingChange={(value)=>{setJournal((current)=>({...current,days:{...current.days,[date]:{...current.days[date],training:value}}}));setOpenCardioActivity(null);setOpenBallSport(null);setOpenFitnessPart(null);}} selectedParts={selectedFitnessPartIds} view={anatomyView} onViewChange={setAnatomyView} /></GlowPanel>
           </section>
 
           <section className="top-grid support-grid">

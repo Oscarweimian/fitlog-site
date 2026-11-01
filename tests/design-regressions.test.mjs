@@ -5,10 +5,10 @@ import { createServer } from 'vite';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-let server, FirstInterface, SessionEditor, ProfileEditor, FoodAccordion, EnergyBar, prepareDrinkEntries;
+let server, FirstInterface, SessionEditor, ProfileEditor, FoodAccordion, EnergyBar, MuscleMap, prepareDrinkEntries;
 before(async () => {
   server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
-  EnergyBar = (await server.ssrLoadModule('/src/App.jsx')).EnergyBar;
+  ({ EnergyBar, MuscleMap } = await server.ssrLoadModule('/src/App.jsx'));
   prepareDrinkEntries = (await server.ssrLoadModule('/src/components/WaterEditor.jsx')).prepareDrinkEntries;
   FirstInterface = (await server.ssrLoadModule('/src/components/FirstInterface.jsx')).default;
   SessionEditor = (await server.ssrLoadModule('/src/components/SessionEditor.jsx')).default;
@@ -162,11 +162,20 @@ test('strength, cardio and sports hover scale only their whole row', async () =>
   assert.doesNotMatch(styles, /\.body-part-option:hover\s*\{[^}]*translateY/);
 });
 
-test('calendar day hover gently scales the whole card only for pointer users who allow motion', async () => {
+test('calendar day hover visibly lifts the whole card only for pointer users who allow motion', async () => {
   const styles = await readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
-  assert.match(styles, /\.calendar-day\s*\{[^}]*transition:[^}]*transform \.18s cubic-bezier\(\.16, 1, \.3, 1\)/);
-  assert.match(styles, /@media\s*\(hover:\s*hover\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{\s*\.calendar-day:hover\s*\{\s*transform:\s*scale\(1\.01\)/);
+  assert.match(styles, /\.calendar-day\s*\{[^}]*transition:[^}]*transform \.22s cubic-bezier\(\.16, 1, \.3, 1\)/);
+  assert.match(styles, /@media\s*\(hover:\s*hover\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{\s*\.calendar-day:hover\s*\{\s*transform:\s*translateY\(-2px\) scale\(1\.025\)/);
   assert.doesNotMatch(styles, /\.calendar-day\s+(?:b|em|small|\.calendar-date):hover\s*\{[^}]*transform:\s*scale/);
+});
+
+test('training focus offers the three day types and only strength shows muscle guidance', () => {
+  const rest = renderToStaticMarkup(createElement(MuscleMap, { training: { area: 'Rest', detail: 'Active recovery', view: 'front', image: '/images/rest-day-recovery.webp' }, trainingType: 'Rest' }));
+  assert.match(rest, /aria-label="Change training day"/);
+  for (const label of ['Rest', 'Sports', 'Strength Training']) assert.match(rest, new RegExp(`>${label}</button>`));
+  assert.doesNotMatch(rest, /Highlighted areas/);
+  const strength = renderToStaticMarkup(createElement(MuscleMap, { training: { area: 'Fitness', isFitness: true }, trainingType: 'Fitness', selectedParts: ['chest'] }));
+  assert.match(strength, /Highlighted areas show your selected muscles/);
 });
 
 test('calendar month is plain and photo actions are consolidated in one corner menu', async () => {
