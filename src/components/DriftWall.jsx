@@ -9,6 +9,23 @@ const DEFAULT_ITEMS = Array.from({ length: 15 }, (_, index) => ({
 const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const columnFactor = (index, variance) => 1 + variance * ((((index * 0.6180339887 + 0.35) % 1) * 2) - 1);
 
+const shuffle = (values, random) => {
+  const result = [...values];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const other = Math.floor(random() * (index + 1));
+    [result[index], result[other]] = [result[other], result[index]];
+  }
+  return result;
+};
+
+export const arrangeWallItems = (items, columns, random = Math.random) => {
+  if (!items.length) return Array.from({ length: columns }, () => []);
+  const photos = shuffle(items, random);
+  const rowOffsets = shuffle(photos.map((_, index) => index), random);
+  return Array.from({ length: columns }, (_, column) =>
+    rowOffsets.map(offset => photos[(offset + column) % photos.length]));
+};
+
 export default function DriftWall({
   items = DEFAULT_ITEMS,
   columns = 5,
@@ -59,11 +76,7 @@ export default function DriftWall({
     return () => mediaQuery.removeEventListener('change', onChange);
   }, []);
 
-  const columnItems = useMemo(() => {
-    const columnList = Array.from({ length: columns }, () => []);
-    items.forEach((item, index) => columnList[index % columns].push(item));
-    return columnList.map((column) => column.length ? column : items.slice(0, 1));
-  }, [items, columns]);
+  const columnItems = useMemo(() => arrangeWallItems(items, columns), [items, columns]);
 
   const columnMeta = useMemo(() => {
     const unit = tileHeight + gap;
@@ -168,7 +181,7 @@ export default function DriftWall({
   }), [tileWidth, tileHeight, gap, radius, perspective, lift, dim, grayscale, overlayColor, fade, style]);
 
   const renderTile = (item, id, columnIndex) => (
-    <div key={id} tabIndex={0} role="button" aria-label={item.title ?? 'Photo'} aria-pressed={activeId===id} onClick={()=>activeId===id?release():activate(id,columnIndex)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();activeId===id?release():activate(id,columnIndex);}}} className={'drift-wall__tile' + (activeId === id ? ' is-active' : '')} data-tile-id={id} data-col={columnIndex} onFocus={() => activate(id, columnIndex)} onBlur={release}>
+    <div key={id} tabIndex={0} role="button" aria-label={item.title ?? 'Photo'} aria-pressed={activeId===id} onClick={()=>activeId===id?release():activate(id,columnIndex)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();activeId===id?release():activate(id,columnIndex);}}} className={'drift-wall__tile' + (item.id && !item.id.startsWith('moment-') ? ' drift-wall__tile--uploaded' : '') + (activeId === id ? ' is-active' : '')} data-tile-id={id} data-col={columnIndex} onFocus={() => activate(id, columnIndex)} onBlur={release}>
       <span className="drift-wall__inner"><img src={item.image} alt={item.title ?? ''} loading="lazy" decoding="async" draggable={false} /><span className="drift-wall__overlay" aria-hidden="true" /></span>
     </div>
   );

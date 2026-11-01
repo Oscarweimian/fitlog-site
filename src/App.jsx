@@ -228,8 +228,8 @@ function App() {
       setJournal(restored);setNotice('Backup restored.');
     }catch(error){setNotice('Import failed: '+error.message);}
   };
-  const photoItems=[...journal.photos,...initialPhotos];
-  const setPhotoItems=(items)=>setJournal(j=>({...j,photos:(typeof items==='function'?items([...j.photos,...initialPhotos]):items).filter(p=>!p.id.startsWith('moment-'))}));
+  const photoItems=journal.photos.length ? journal.photos : initialPhotos;
+  const setPhotoItems=(items)=>setJournal(j=>({...j,photos:(typeof items==='function'?items(j.photos):items).filter(p=>!p.id.startsWith('moment-'))}));
   const [quoteIndex, setQuoteIndex] = useState(0);
 
   const [meals,setMeals]=field('meals',initialMeals);

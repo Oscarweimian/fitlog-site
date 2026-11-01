@@ -88,7 +88,7 @@ button { cursor: pointer; }
 .photo-menu__notice, .photo-menu__empty { margin: 2px 0; color: #b5c8af; font-size: .6rem; line-height: 1.4; }
 .photo-menu__list { display: grid; gap: 2px; }
 .photo-menu__item { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 48px; padding: 4px 0; border-top: 1px solid rgba(181, 237, 126, .12); }
-.photo-menu__item img { width: 36px; height: 36px; border-radius: 5px; object-fit: cover; }
+.photo-menu__item img { width: 36px; height: 36px; border-radius: 5px; object-fit: cover; object-position: center top; }
 .photo-menu__item span { min-width: 0; overflow: hidden; color: #e9f4e4; font-size: .6rem; text-overflow: ellipsis; white-space: nowrap; }
 .photo-menu__item button { min-height: 40px; padding: 4px 6px; border: 0; color: #e4b27f; background: transparent; font-size: .58rem; }
 .photo-menu__item button:hover { color: #ffd5a9; text-decoration: underline; }

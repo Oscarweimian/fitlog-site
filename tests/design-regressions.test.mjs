@@ -5,7 +5,7 @@ import { createServer } from 'vite';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-let server, FirstInterface, SessionEditor, ProfileEditor, FoodAccordion, EnergyBar, MuscleMap, prepareDrinkEntries;
+let server, FirstInterface, SessionEditor, ProfileEditor, FoodAccordion, EnergyBar, MuscleMap, prepareDrinkEntries, arrangeWallItems;
 before(async () => {
   server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
   ({ EnergyBar, MuscleMap } = await server.ssrLoadModule('/src/App.jsx'));
@@ -14,8 +14,30 @@ before(async () => {
   SessionEditor = (await server.ssrLoadModule('/src/components/SessionEditor.jsx')).default;
   ProfileEditor = (await server.ssrLoadModule('/src/components/ProfileEditor.jsx')).default;
   FoodAccordion = (await server.ssrLoadModule('/src/components/FoodAccordion.jsx')).default;
+  arrangeWallItems = (await server.ssrLoadModule('/src/components/DriftWall.jsx')).arrangeWallItems;
 });
 after(async () => { await server?.close(); });
+
+test('photo wall varies images across columns and down each repeating track', () => {
+  for (const count of [2, 3, 4]) {
+    const photos = Array.from({ length: count }, (_, index) => ({ id: `photo-${index}` }));
+    const columns = arrangeWallItems(photos, 4, () => 0.37);
+    assert.equal(columns.length, 4);
+    columns.forEach(column => {
+      assert.deepEqual(new Set(column), new Set(photos));
+      for (let row = 0; row < count; row += 1) {
+        assert.notEqual(column[row], column[(row + 1) % count]);
+      }
+    });
+    for (let row = 0; row < count; row += 1) {
+      for (let col = 1; col < columns.length; col += 1) {
+        assert.notEqual(columns[col][row], columns[col - 1][row]);
+      }
+    }
+  }
+  const solo = { id: 'only-photo' };
+  assert.deepEqual(arrangeWallItems([solo], 4, () => 0.37), [[solo], [solo], [solo], [solo]]);
+});
 
 test('calorie intake bar fills by intake versus target without changing macro proportions or burn bar', () => {
   const segments = [
