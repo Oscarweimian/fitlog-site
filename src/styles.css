@@ -179,9 +179,9 @@ button { cursor: pointer; }
 .muscle-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .muscle-hotspot path, .muscle-hotspot rect { fill: rgba(255, 58, 78, .58); stroke: rgba(255, 220, 222, .72); stroke-linejoin: round; stroke-width: 4; }
 .support-grid { grid-template-columns: minmax(230px, .72fr) minmax(0, 1.28fr); margin-top: 14px; }
-.streak-card { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(125deg, rgba(44, 91, 17, .37), rgba(5, 19, 7, .39)); }
+.streak-card { display: flex; flex-direction: column; justify-content: flex-start; background: linear-gradient(125deg, rgba(44, 91, 17, .37), rgba(5, 19, 7, .39)); }
 .streak-card > span, .streak-card small { color: #bed7b8; font-size: .66rem; }
-.streak-card strong { display: flex; align-items: baseline; gap: 6px; margin: 3px 0; color: #e7ffd0; font-family: "DM Mono", monospace; font-size: .76rem; }
+.streak-card strong { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 0; color: #e7ffd0; font-family: "DM Mono", monospace; font-size: .76rem; }
 .streak-card strong b { color: #fff; font-size: 2rem; letter-spacing: -.08em; }
 .quote-card { display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(228, 178, 127, .42); background: linear-gradient(125deg, rgba(91, 50, 29, .42), rgba(25, 13, 7, .42)); }
 .quote-mark { color: var(--signal-brown); font-family: Georgia, serif; font-size: 2.1rem; line-height: .5; }
