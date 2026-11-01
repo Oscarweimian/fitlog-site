@@ -208,7 +208,7 @@ function ExerciseRecordEditor({ part, onSave }) {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState('calendar');
+  const [activeView, setActiveView] = useState('home');
   const [selectedCalendarDay, setSelectedCalendarDay] = useState({date:localDate(),label:new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),training:'Fitness'});
   const {journal,setJournal,ready,status}=useJournal();
   const date=selectedCalendarDay.date;
