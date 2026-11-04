@@ -12,6 +12,7 @@ import { withProfileDefaults, localDate, sumNutrition, drinksNutrition, dailyEne
 import { useJournal } from './data/useJournal';
 import { downloadBackup, validateBackupPhotos } from './data/storage';
 import ProfileEditor from './components/ProfileEditor';
+import BackupActions from './components/BackupActions';
 import SessionEditor from './components/SessionEditor';
 import { quotes, nextQuoteIndex } from './data/quotes';
 
@@ -455,6 +456,7 @@ function App() {
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 3.5 5 8l4.5 4.5" /></svg>
               <span>Back to Home</span>
             </button>
+            <BackupActions onExport={() => downloadBackup(journal)} onRestore={restoreBackup} />
           </div>
           <CalendarView selectedDate={selectedCalendarDay.date} fitnessLabelsByDate={fitnessLabelsByDate} trainingByDate={Object.fromEntries(Object.entries(journal.days).map(([key,value])=>[key,value.training]))} onOpenDay={(day) => { setSelectedCalendarDay(day); setNotice(''); setOpenCardioActivity(null); setOpenBallSport(null); setOpenFitnessPart(null); setIsFitnessActionFormOpen(true); setActiveView('daily'); }} photoItems={photoItems} setPhotoItems={setPhotoItems} />
         </> : <main id="daily" className="page-content">

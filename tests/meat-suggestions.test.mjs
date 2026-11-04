@@ -20,12 +20,19 @@ test('more specific words narrow the choices without adding restaurant meals', (
   assert.equal(meatSuggestions('beef tortilla', byId).length, 0);
 });
 
-test('all curated meats have source nutrients and reuse one image per meat category', () => {
-  for (const [query, image] of [['beef', 'beef.webp'], ['chicken', 'chicken-breast.webp'], ['pork', 'pork-sausage.webp']]) {
+test('curated meats keep source nutrients and use the requested shared photos', () => {
+  const imageById = new Map([
+    ['174034','beef'],['169484','beef'],['167536','beef'],
+    ['172380','chicken-breast'],['171477','chicken-breast'],
+    ['167887','pulled-pork'],['173344','pulled-pork'],
+    ['174575','bacon'],['168322','bacon'],['174578','pork-sausage'],
+  ]);
+  for (const query of ['beef', 'chicken', 'pork']) {
     for (const choice of meatSuggestions(query, byId)) {
+      const expected = `/images/foods-ai-v1/${imageById.get(choice.id)}.webp`;
       assert.equal(typeof choice.food.kcal, 'number');
-      assert.equal(imageFor(choice.label)?.src, `/images/foods-ai-v1/${image}`);
-      assert.equal(imageFor(choice.food.label)?.src, `/images/foods-ai-v1/${image}`);
+      assert.equal(imageFor(choice.label)?.src, expected);
+      assert.equal(imageFor(choice.food.label)?.src, expected);
     }
   }
 });

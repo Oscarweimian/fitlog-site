@@ -39,6 +39,32 @@
     "use": "Category illustration only; not used to calculate nutrition."
   },
   {
+    "id": "pulled-pork",
+    "label": "BBQ pulled pork and pork chop",
+    "src": "/images/foods-ai-v1/pulled-pork.webp",
+    "source": "AI-generated with OpenAI ImageGen",
+    "generatedFile": "exec-761ac1c1-1bda-49b9-b9a6-536cd8aee453.png",
+    "approved": true,
+    "width": 960,
+    "height": 1440,
+    "bytes": 161166,
+    "style": "Charcoal slate tabletop, off-white ceramic plate, soft upper-left daylight, elevated camera angle.",
+    "use": "Category illustration only; not used to calculate nutrition."
+  },
+  {
+    "id": "bacon",
+    "label": "Bacon and pepperoni",
+    "src": "/images/foods-ai-v1/bacon.webp",
+    "source": "AI-generated with OpenAI ImageGen",
+    "generatedFile": "exec-1be2c294-f0e5-425f-8788-3dfcb6dbd2be.png",
+    "approved": true,
+    "width": 960,
+    "height": 1440,
+    "bytes": 157618,
+    "style": "Charcoal slate tabletop, off-white ceramic plate, soft upper-left daylight, elevated camera angle.",
+    "use": "Category illustration only; not used to calculate nutrition."
+  },
+  {
     "id": "salmon",
     "label": "Salmon",
     "src": "/images/foods-ai-v1/salmon.webp",

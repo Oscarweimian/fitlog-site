@@ -35,7 +35,11 @@ button { cursor: pointer; }
 .topbar nav button:hover, .topbar nav button.active { color: #f8fff3; }
 .goal-chip { margin-left: auto; padding: 6px 10px; border: 1px solid rgba(185, 255, 95, .24); border-radius: 999px; color: #d9ffa4; background: rgba(132, 204, 22, .1); font-size: .68rem; }
 .topbar--calendar { min-height: 58px; padding-inline: 26px; border-bottom: 0; background: rgba(2, 11, 5, .34); }
-.calendar-return { padding: 14px 14px 0; }
+.calendar-return { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 18px; padding: 14px 14px 0; }
+.backup-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 14px; }
+.backup-actions button { min-height: 44px; padding: 0 2px; border: 0; color: #c5fb73; background: transparent; font-size: .68rem; font-weight: 600; }
+.backup-actions button:hover { color: #fff; }
+.backup-actions button:focus-visible { outline: 2px solid #c5fb73; outline-offset: 3px; border-radius: 3px; }
 .calendar-home-link { display: inline-flex; align-items: center; gap: 7px; padding: 0; border: 0; color: #c5fb73; background: transparent; font-size: .74rem; font-weight: 600; transform-origin: left center; transition: transform .18s cubic-bezier(.16, 1, .3, 1); }
 .calendar-home-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .calendar-home-link:hover { transform: scale(1.05); }
@@ -315,7 +319,8 @@ button { cursor: pointer; }
 .food-glow .gallery-count { color: #f3c99b; }
 .eyebrow { display: block; margin-bottom: 3px; color: #abda67; font-family: "DM Mono", monospace; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; }
 .gallery-count { color: #caff82; font-family: "DM Mono", monospace; font-size: .63rem; }
-.food-accordion { display: flex; gap: 7px; height: 202px; margin-top: 12px; perspective: 1100px; }
+.food-accordion-list { display: grid; gap: 12px; margin-top: 12px; }
+.food-accordion { display: flex; gap: 7px; height: 202px; perspective: 1100px; }
 .food-panel { position: relative; flex: 1 1 0; min-width: 0; overflow: hidden; padding: 0; border: 1px solid rgba(195, 255, 123, .14); border-radius: 9px; color: #fff; background: #11210e; cursor: pointer; transform-style: preserve-3d; transition: flex-grow .55s cubic-bezier(.22,1,.36,1), transform .55s cubic-bezier(.22,1,.36,1), filter .4s ease; }
 .food-glow .food-panel { border-color: rgba(236, 183, 129, .18); background: #27170f; }
 .food-panel:not(.is-active) { filter: grayscale(.85) brightness(.72); transform: rotateY(7deg); }

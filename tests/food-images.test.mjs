@@ -13,6 +13,8 @@ test('requested English food names map to local photo categories', () => {
   for (const [name,id] of [
     ['Beef','beef'],['grilled beef steak','beef'],['Chicken breast','chicken-breast'],
     ['Pork','pork-sausage'],['Pork sausage','pork-sausage'],['Sausages','pork-sausage'],
+    ['Pork chop · pan-fried','pulled-pork'],['Pulled pork · BBQ sauce','pulled-pork'],
+    ['Pepperoni · beef & pork','bacon'],['Bacon · pan-fried','bacon'],
     ['Salmon','salmon'],['Salmon · raw','salmon'],['Salmon · pan-fried (estimate)','salmon'],
     ['Cod · pan-fried (estimate)','cod'],['Cod · deep-fried, battered (fish estimate)','cod'],
     ['Eggs','eggs'],['Scrambled eggs','eggs'],
@@ -29,7 +31,12 @@ test('USDA names and preparation punctuation map without changing nutrition', ()
   for (const [name,id] of [
     ['Beef, loin, cooked, grilled','beef'],
     ['Chicken, broilers or fryers, breast, meat only, cooked, roasted','chicken-breast'],
-    ['Sausage, pork, cooked','pork-sausage'],['Fish, salmon, Atlantic, farmed, cooked, dry heat','salmon'],
+    ['Sausage, pork, cooked','pork-sausage'],
+    ['Pork, fresh, loin, top loin (chops), boneless, separable lean and fat, cooked, pan-fried','pulled-pork'],
+    ['Pulled pork in barbecue sauce','pulled-pork'],
+    ['Pepperoni, beef and pork, sliced','bacon'],
+    ['Pork, cured, bacon, pre-sliced, cooked, pan-fried','bacon'],
+    ['Fish, salmon, Atlantic, farmed, cooked, dry heat','salmon'],
     ['Egg, whole, cooked, hard-boiled','eggs'],['Broccoli, frozen, cooked, boiled','broccoli'],
     ['Lettuce, cos or romaine, raw','lettuce'],['Tomatoes, red, ripe, raw','tomato'],['Potatoes, flesh and skin, boiled','potato']
   ]) assert.equal(imageFor(name)?.id,id,name);
@@ -62,7 +69,7 @@ test('unrelated foods and misleading substrings keep the neutral placeholder', (
 
 test('the bundled food photos include the new previews', () => {
   const records=JSON.parse(fs.readFileSync('public/images/foods-ai-v1/manifest.json','utf8'));
-  assert.equal(records.length,16);
+  assert.equal(records.length,18);
   for(const photo of records){
     assert.match(photo.src,/^\/images\/foods-ai-v1\/[a-z-]+\.webp$/);
     const bytes=fs.readFileSync(`public${photo.src}`);

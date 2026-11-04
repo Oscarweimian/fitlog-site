@@ -228,6 +228,15 @@ test('closed metrics and gallery do not add technical explanation blocks', () =>
   assert.doesNotMatch(gallery, /Illustrative food photos|No foods logged|Food photo library/);
 });
 
+test('food gallery starts another row after five foods', () => {
+  const items = Array.from({ length: 7 }, (_, index) => ({ label: `Food ${index + 1}`, pendingImage: true }));
+  const html = renderToStaticMarkup(createElement(FoodAccordion, { items }));
+  const starts = [...html.matchAll(/<div class="food-accordion">/g)].map(match => match.index);
+  assert.equal(starts.length, 2);
+  assert.equal((html.slice(starts[0], starts[1]).match(/class="food-panel/g) || []).length, 5);
+  assert.equal((html.slice(starts[1]).match(/class="food-panel/g) || []).length, 2);
+});
+
 test('restored interface excludes unapproved calculation and provenance UI', async () => {
   const [app, meals, water, profile] = await Promise.all([
     readFile(new URL('../src/App.jsx', import.meta.url), 'utf8'),

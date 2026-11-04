@@ -1,16 +1,18 @@
 // Category illustrations only: never used to identify foods or calculate nutrition.
-// User-approved AI images are bundled locally; see /images/foods-ai-v1/manifest.json.
+// AI images are bundled locally; review status is tracked in the manifest.
 const photo = id => ({id,src:`/images/foods-ai-v1/${id}.webp`,position:'center',size:'cover'});
 const derivative = /\b(juice|smoothie|oil|sauce|soup|broth|stock|jam|jelly|candy|candies|muffins?|cakes?|cookies?|crackers?|chips|flavou?red|extract|powder)\b/;
 export function imageFor(label) {
   if(typeof label !== 'string') return null;
   let text=label.toLowerCase().normalize('NFKC').replace(/[–—-]/g,' ').replace(/\s+/g,' ').trim();
-  // One existing illustration per requested meat category, including the
-  // processed forms whose USDA labels do not begin with the meat name.
+  // Match curated pork forms before the generic pork/sausage fallback.
   if(/^(?:snacks,\s*)?beef jerky\b/.test(text))return photo('beef');
-  if(/^pulled pork(?: · bbq sauce| in barbecue sauce)$/.test(text) ||
-     /^pepperoni(?: · beef & pork|, beef and pork, sliced)$/.test(text) ||
-     /^bacon · pan fried$/.test(text))return photo('pork-sausage');
+  if(/^pulled pork(?: · bbq sauce| in barbecue sauce)?$/.test(text) ||
+     /^pork chop(?: · pan fried)?$/.test(text) ||
+     /^pork, fresh, loin, top loin \(chops\), boneless\b/.test(text))return photo('pulled-pork');
+  if(/^pepperoni(?: · beef & pork|, beef and pork, sliced)?$/.test(text) ||
+     /^bacon(?: · pan fried)?$/.test(text) ||
+     /^pork, cured, bacon\b/.test(text))return photo('bacon');
   if(/^cream cake · whipped cream \(estimate\)$/.test(text))return photo('cream-cake');
   if(/^(?:french fries\b|fast foods, potato, french fried\b)/.test(text))return photo('potato');
   if(!text || derivative.test(text))return null;
