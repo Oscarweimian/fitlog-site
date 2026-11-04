@@ -17,9 +17,7 @@ const aliases = new Map([
   ['tomatoes', '170050'],
   ['cooked tomato', '170050'],
   ['cooked tomatoes', '170050'],
-  ['egg', '173424'],
-  ['eggs', '173424'],
-  ['salmon', '175168'],
+  ['raw salmon', '175167'],
   ['cooked salmon', '175168'],
   ['lettuce', '169247'],
   ['orange', '169097'],
@@ -34,13 +32,26 @@ const aliases = new Map([
   ['hami melon', '169092'],
   ['hard boiled egg', '173424'],
   ['egg hard boiled', '173424'],
+  ['boiled egg', '173424'],
+  ['fried egg', '173423'],
+  ['fried eggs', '173423'],
+  ['pan fried egg', '173423'],
+  ['bread', '174924'],
+  ['white bread', '174924'],
+  ['bread white plain', '174924'],
   ['skinless chicken breast roasted', '171477'],
   ['roasted skinless chicken breast', '171477'],
 ]);
 
+const aliasDisplayLabels = new Map([
+  ['bread', 'Bread · white (plain)'],
+  ['white bread', 'Bread · white (plain)'],
+  ['bread white plain', 'Bread · white (plain)'],
+]);
+
 // A short personal menu, backed by specific local USDA records rather than
 // whichever unrelated dish happens to contain the search word first.
-const meatChoices = [
+export const meatChoices = [
   { category: 'beef', id: '174034', label: 'Ground beef crumbles · 85/15 estimate' },
   { category: 'beef', id: '169484', label: 'Beef steak · cooked (general estimate)' },
   { category: 'beef', id: '167536', label: 'Beef jerky · formed (general estimate)' },
@@ -53,7 +64,7 @@ const meatChoices = [
   { category: 'pork', id: '174578', label: 'Pork sausage · pan-fried' },
 ];
 
-const potatoChoices = [
+export const potatoChoices = [
   { category: 'potato', id: '170698', label: 'French fries · fried in oil' },
   { category: 'potato', id: '170093', label: 'Baked potato · plain' },
   { category: 'potato', id: '170440', label: 'Boiled potato · plain' },
@@ -98,7 +109,7 @@ export function resolveFood(query, catalog) {
   const aliasId = aliases.get(name);
   if (aliasId) {
     const food = catalog.find(item => item.id === aliasId);
-    if (food) return { food, reason: null };
+    if (food) return { food, reason: null, displayLabel: aliasDisplayLabels.get(name) };
   }
 
   const words = name.split(' ');

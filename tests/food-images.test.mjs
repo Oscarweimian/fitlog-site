@@ -13,8 +13,15 @@ test('requested English food names map to local photo categories', () => {
   for (const [name,id] of [
     ['Beef','beef'],['grilled beef steak','beef'],['Chicken breast','chicken-breast'],
     ['Pork','pork-sausage'],['Pork sausage','pork-sausage'],['Sausages','pork-sausage'],
-    ['Salmon','salmon'],['Eggs','eggs'],['Scrambled eggs','eggs'],['Broccoli','broccoli'],
-    ['Romaine lettuce','lettuce'],['Tomatoes','tomato'],['Boiled potatoes','potato']
+    ['Salmon','salmon'],['Salmon · raw','salmon'],['Salmon · pan-fried (estimate)','salmon'],
+    ['Cod · pan-fried (estimate)','cod'],['Cod · deep-fried, battered (fish estimate)','cod'],
+    ['Eggs','eggs'],['Scrambled eggs','eggs'],
+    ['Boiled egg · hard-boiled','eggs'],['Fried egg · pan-fried','eggs'],['Broccoli','broccoli'],
+    ['Romaine lettuce','lettuce'],['Tomatoes','tomato'],['Boiled potatoes','potato'],
+    ['Bread','bread'],['Bread · white (plain)','bread'],
+    ['Cream cake · whipped cream (estimate)','cream-cake'],
+    ['Pizza · cheese, regular crust (fast-food estimate)','pizza'],
+    ['Quesadilla · cheese (restaurant estimate)','quesadilla']
   ]) assert.equal(imageFor(name)?.id,id,name);
 });
 
@@ -36,8 +43,11 @@ test('listed fruit names share one image, not individual network requests', () =
     assert.equal(imageFor(name)?.src,'/images/foods-ai-v1/fruit.webp',name);
 });
 
-test('pizza and burritos share a single representative image, ahead of toppings', () => {
-  for(const name of ['Pizza','Mexican burrito','Tortillas, ready-to-bake or -fry, flour','TACO BELL, BURRITO SUPREME with beef','Fast Food, Pizza Chain, 14" pizza, sausage topping, thin crust'])
+test('pizza and quesadilla use their own images while burritos keep the flatbread image', () => {
+  for(const name of ['Pizza','Fast Food, Pizza Chain, 14" pizza, sausage topping, thin crust'])
+    assert.equal(imageFor(name)?.src,'/images/foods-ai-v1/pizza.webp',name);
+  assert.equal(imageFor('Quesadilla · cheese (restaurant estimate)')?.src,'/images/foods-ai-v1/quesadilla.webp');
+  for(const name of ['Mexican burrito','Tortillas, ready-to-bake or -fry, flour','TACO BELL, BURRITO SUPREME with beef'])
     assert.equal(imageFor(name)?.src,'/images/foods-ai-v1/flatbread.webp',name);
 });
 
@@ -50,16 +60,16 @@ test('unrelated foods and misleading substrings keep the neutral placeholder', (
   assert.equal(rows[1].pendingImage,false);
 });
 
-test('all eleven approved AI images are bundled WebPs with provenance', () => {
+test('the bundled food photos include the new previews', () => {
   const records=JSON.parse(fs.readFileSync('public/images/foods-ai-v1/manifest.json','utf8'));
-  assert.equal(records.length,11);
+  assert.equal(records.length,16);
   for(const photo of records){
     assert.match(photo.src,/^\/images\/foods-ai-v1\/[a-z-]+\.webp$/);
     const bytes=fs.readFileSync(`public${photo.src}`);
     assert.equal(bytes.toString('ascii',0,4),'RIFF');
     assert.equal(bytes.toString('ascii',8,12),'WEBP');
     assert.equal(bytes.length,photo.bytes);
-    assert.equal(photo.approved,true);
+    assert.equal(photo.approved,!['cream-cake','eggs','cod','pizza','quesadilla'].includes(photo.id));
     assert.equal(photo.source,'AI-generated with OpenAI ImageGen');
     assert.ok(photo.generatedFile && photo.width && photo.height);
   }

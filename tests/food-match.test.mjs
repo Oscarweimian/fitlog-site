@@ -9,6 +9,9 @@ const catalog = JSON.parse(readFileSync(new URL('../public/data/usda-sr-2018-v1.
 test('a broad food name is not silently assigned arbitrary nutrition', () => {
   assert.equal(resolveFood('beef', catalog).reason, 'ambiguous');
   assert.equal(resolveFood('chicken breast', catalog).reason, 'ambiguous');
+  assert.equal(resolveFood('egg', catalog).reason, 'ambiguous');
+  assert.equal(resolveFood('salmon', catalog).reason, 'ambiguous');
+  assert.equal(resolveFood('cod', catalog).reason, 'ambiguous');
 });
 
 test('clear everyday names and full catalog names resolve to their exact record', () => {
@@ -20,7 +23,6 @@ test('clear everyday names and full catalog names resolve to their exact record'
 test('plain produce and proteins use the agreed cooked or fresh reference records', () => {
   for (const [query, id] of [
     ['broccoli', '169967'], ['tomato', '170050'], ['tomatoes', '170050'],
-    ['egg', '173424'], ['eggs', '173424'], ['salmon', '175168'],
     ['lettuce', '169247'], ['orange', '169097'], ['tangerine', '169105'],
     ['banana', '173944'], ['blueberry', '171711'], ['grapes', '174683'],
     ['cantaloupe', '169092'], ['hami melon', '169092'],
@@ -31,9 +33,22 @@ test('plain produce and proteins use the agreed cooked or fresh reference record
   });
 });
 
+test('plain bread uses a specific white bread reference and scales by weight', () => {
+  const result = resolveFood('bread', catalog);
+  assert.equal(result.food?.id, '174924');
+  assert.equal(result.displayLabel, 'Bread · white (plain)');
+  assert.equal(resolveFood('white bread', catalog).food?.id, '174924');
+  assert.deepEqual(sumNutrition([{foods:[{...result.food, grams:50}]}]), {
+    calories:133, protein:4.4, carbs:24.7, fat:1.7, fiber:1.4, sodium:245,
+  });
+});
+
 test('specific preparations still override the plain-name defaults', () => {
   assert.equal(resolveFood('Broccoli, raw', catalog).food?.id, '170379');
   assert.equal(resolveFood('Egg, whole, cooked, fried', catalog).food?.id, '173423');
+  assert.equal(resolveFood('boiled egg', catalog).food?.id, '173424');
+  assert.equal(resolveFood('fried egg', catalog).food?.id, '173423');
+  assert.equal(resolveFood('raw salmon', catalog).food?.id, '175167');
   assert.equal(resolveFood('Fish, salmon, sockeye, cooked, dry heat', catalog).food?.id, '173692');
   assert.equal(resolveFood('pizza', catalog).reason, 'ambiguous');
   assert.equal(resolveFood('burrito', catalog).reason, 'ambiguous');

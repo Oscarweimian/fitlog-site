@@ -1,6 +1,6 @@
 export const VERSION = 1;
 export function withProfileDefaults(profile = {}) {
-  return {...profile,sex:profile.sex || 'male',goal:profile.goal || 'recomp',ageRange:profile.ageRange || '18-20',age:profile.age ?? ''};
+  return {...profile,sex:profile.sex || 'male',goal:profile.goal || 'recomp',ageRange:profile.ageRange || '15-50',age:profile.age ?? ''};
 }
 export const emptyJournal = () => ({ version: VERSION, days: {}, fitnessPartsByDate: {}, fitnessExerciseRecords: {}, photos: [], profile: withProfileDefaults() });
 export function localDate(date = new Date()) {
@@ -15,7 +15,12 @@ export function sumNutrition(meals) {
   const totals = { calories:0, protein:0, carbs:0, fat:0, fiber:0, sodium:0 };
   meals.flatMap(m => m.foods || []).forEach(food => {
     const portion = numberIn(food.grams, 0.1, 5000, 'Food weight') / 100;
-    Object.keys(totals).forEach(key => { totals[key] += (food[key === 'calories' ? 'kcal' : key] || 0) * portion; });
+    const hasEnteredCalories = food.caloriesOverride != null && food.caloriesOverride !== '';
+    // A portion's entered calories replace its catalog calories; never add both.
+    totals.calories += hasEnteredCalories
+      ? numberIn(food.caloriesOverride, 0, 50000, 'Food calories')
+      : (food.kcal || 0) * portion;
+    for (const key of ['protein', 'carbs', 'fat', 'fiber', 'sodium']) totals[key] += (food[key] || 0) * portion;
   });
   return Object.fromEntries(Object.entries(totals).map(([key,value]) => [key,Math.round(value*10)/10]));
 }
@@ -117,12 +122,10 @@ function energyProfile(profile) {
   try {
     const weight = numberIn(profile.weight,30,300,'Weight');
     const height = numberIn(profile.height,120,230,'Height');
-    const age = numberIn(profile.age,18,64,'Age');
+    const age = numberIn(profile.age,15,50,'Age');
     if(!Number.isInteger(age))return null;
     if (!['male','female'].includes(profile.sex) || !profile.eligible || profile.activityBasis!=='nonExercise') return null;
     const activity = numberIn(profile.activity,1.2,1.9,'Activity factor');
-    const bmi = weight/(height/100)**2;
-    if (bmi < 18.5 || bmi >= 40) return null;
     const bmr = 10*weight+6.25*height-5*age+(profile.sex==='male'?5:-161);
     return {weight,bmr:Math.round(bmr),baseline:Math.round(bmr*activity),burnBaseline:Math.round(bmr*1.375)};
   } catch { return null; }
@@ -157,6 +160,10 @@ export function dailyEnergy(profile, training, records={}) {
     complete:!!body && !incomplete,
     excludedCardio:training==='Sports' && Object.keys(records.cardioRecords||{}).length>0
   };
+}
+export function dailyBalance(intakeCalories, energy, { intakeKnown = false, caloriesIncomplete = false } = {}) {
+  if (!intakeKnown || caloriesIncomplete || !Number.isFinite(intakeCalories) || !Number.isFinite(energy?.total)) return null;
+  return Math.round((intakeCalories - energy.total) * 10) / 10;
 }
 export function planFor(profile) {
   try {
@@ -208,9 +215,10 @@ export function validateJournal(data) {
   if(![data.days,data.profile,data.fitnessPartsByDate,data.fitnessExerciseRecords].every(object))throw new Error('Invalid backup structure.');
   const checkProfile=profile=>{
     if(!object(profile))throw new Error('Invalid profile.');
-    for(const [key,min,max] of [['height',120,230],['weight',30,300],['age',18,64],['activity',1.2,1.9]])if(profile[key]!=null && profile[key]!=='')numberIn(profile[key],min,max,key);
+    // Accept ages from older backups; the editor and current calculation use 15–50.
+    for(const [key,min,max] of [['height',120,230],['weight',30,300],['age',15,64],['activity',1.2,1.9]])if(profile[key]!=null && profile[key]!=='')numberIn(profile[key],min,max,key);
     if(profile.age!=='' && profile.age!=null && !Number.isInteger(Number(profile.age)))throw new Error('Age must be a whole number.');
-    if(profile.ageRange!=null && profile.ageRange!=='18-20')throw new Error('Invalid default age range.');
+    if(profile.ageRange!=null && !['18-20','15-50'].includes(profile.ageRange))throw new Error('Invalid default age range.');
     if(profile.sex && !['female','male'].includes(profile.sex) || profile.goal && !['recomp','maintain','lose','gain'].includes(profile.goal) || profile.eligible!=null && typeof profile.eligible!=='boolean' || profile.activityBasis!=null && profile.activityBasis!=='nonExercise')throw new Error('Invalid profile choices.');
   };
   checkProfile(data.profile);
@@ -231,6 +239,7 @@ export function validateJournal(data) {
           if(!text(food.label)) throw new Error('Invalid food.');
           numberIn(food.grams,.1,5000,'Food weight');
           for(const key of ['kcal','protein','carbs','fat']) numberIn(food[key],0,key==='kcal'?1000:100,key);
+          if(food.caloriesOverride!=null && food.caloriesOverride!=='') numberIn(food.caloriesOverride,0,50000,'Food calories');
           for(const key of ['fiber','sodium'])if(food[key]!=null)numberIn(food[key],0,key==='fiber'?100:100000,key);
         }
       }

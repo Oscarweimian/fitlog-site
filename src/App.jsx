@@ -8,7 +8,7 @@ import WaterEditor from './components/WaterEditor';
 import CalendarView, { initialPhotos } from './components/CalendarView';
 const FirstInterface=lazy(()=>import('./components/FirstInterface'));
 import { galleryFor } from './data/foodImages';
-import { withProfileDefaults, localDate, sumNutrition, drinksNutrition, dailyEnergy, distinctExerciseCount, strengthMetFor, planFor, trainingStreak, validateJournal } from './data/journal';
+import { withProfileDefaults, localDate, sumNutrition, drinksNutrition, dailyEnergy, dailyBalance, distinctExerciseCount, strengthMetFor, planFor, trainingStreak, validateJournal } from './data/journal';
 import { useJournal } from './data/useJournal';
 import { downloadBackup, validateBackupPhotos } from './data/storage';
 import ProfileEditor from './components/ProfileEditor';
@@ -287,7 +287,7 @@ function App() {
   const waterLiters = waterMilliliters / 1000;
   const fitnessLabelsByDate = useMemo(() => Object.fromEntries(Object.entries(fitnessPartsByDate).map(([date, parts]) => [date, parts.map((partId) => fitnessBodyParts.find((part) => part.id === partId)?.name).filter(Boolean)])), [fitnessPartsByDate]);
   const intakeKnown=meals.some(meal=>(meal.foods||[]).length>0) || waterEntries.some(entry=>Number(entry.amount)>0 || Number(entry.scoops)>0);
-  const energyBalance=energy.total==null?null:Math.round((nutrition.calories-energy.total)*10)/10;
+  const energyBalance=dailyBalance(nutrition.calories,energy,{intakeKnown,caloriesIncomplete:drinks.caloriesIncomplete});
   const macroSegments=[
     {label:'Protein',value:Math.round(nutrition.protein*4),tone:'protein'},
     {label:'Carbs',value:Math.round(nutrition.carbs*4),tone:'carbs'},
@@ -300,7 +300,7 @@ function App() {
     ...(isFitnessDay?[{label:energy.strengthMet===5?'Strength · Higher volume':'Strength',value:energy.strength,tone:'strength'},{label:'Cardio',value:energy.cardio,tone:'cardio'}]:[]),
     ...(isBallSportDay?[{label:'Ball sports',value:energy.sports,tone:'sports'}]:[])
   ];
-  const balanceReady=energy.complete && !drinks.caloriesIncomplete && intakeKnown;
+  const balanceReady=energyBalance!==null;
   const burnNotice=energy.total==null?'Confirm Body Metrics and non-workout activity.':!energy.complete?isFitnessDay?'Log strength training to complete this estimate.':'Log ball sports to complete this estimate.':null;
   const balanceGoalLabel={recomp:'Body recomposition',maintain:'Maintain weight',lose:'Fat loss',gain:'Muscle gain'}[profile.goal];
   const balanceDisplay=balanceReady
@@ -506,7 +506,7 @@ function App() {
 
           <section className="section energy-summary-grid" aria-label="Daily energy summary">
             <GlowPanel className="burn-glow" tone="energy"><article className="card burn-card"><span>Estimated Daily Burn</span><b>{energy.total==null?'—':energy.total.toLocaleString('en-US')+' kcal'}</b>{energy.total!=null && <EnergyBar segments={burnSegments} />}{burnNotice && <small>{burnNotice}</small>}{energy.excludedCardio && <small>Cardio records on a sports day are not included.</small>}</article></GlowPanel>
-            <GlowPanel className="balance-glow" tone="training"><article className="card balance-card"><span className="balance-card-heading"><span>Intake − Burn</span>{plan && <span className="balance-goal">{balanceGoalLabel} goal</span>}</span><b>{balanceDisplay}</b><small>{!intakeKnown?'Log your food to see a balance.':drinks.caloriesIncomplete?'Enter protein powder calories per scoop to complete the balance.':!energy.complete?'Complete your training and profile to see a balance.':actualBalanceDescription}</small>{balanceReady && <small>{balanceAnnotation}</small>}</article></GlowPanel>
+            <GlowPanel className="balance-glow" tone="training"><article className="card balance-card"><span className="balance-card-heading"><span>Intake − Burn</span>{plan && <span className="balance-goal">{balanceGoalLabel} goal</span>}</span><b>{balanceDisplay}</b><small>{!intakeKnown?'Log your food to see a balance.':drinks.caloriesIncomplete?'Enter protein powder calories per scoop to complete the balance.':energy.total==null?'Complete your profile to see a balance.':actualBalanceDescription}</small>{balanceReady && <small>{balanceAnnotation}</small>}</article></GlowPanel>
           </section>
 
           <section className="section">

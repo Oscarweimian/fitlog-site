@@ -1,12 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyJournal, withProfileDefaults, localDate, sumNutrition, drinkOptions, drinksNutrition, makeSession, sessionBurn, dailyEnergy, planFor, validateJournal, trainingStreak, numberIn} from '../src/data/journal.js';
+import {emptyJournal, withProfileDefaults, localDate, sumNutrition, drinkOptions, drinksNutrition, makeSession, sessionBurn, dailyEnergy, dailyBalance, planFor, validateJournal, trainingStreak, numberIn} from '../src/data/journal.js';
 
 const chicken={label:'Chicken',grams:100,kcal:165,protein:31,carbs:0,fat:3.6};
 test('grams scale actual nutrient values; same foods remain distinct',()=>{
   assert.equal(sumNutrition([{foods:[chicken]}]).calories,165);
   assert.equal(sumNutrition([{foods:[{...chicken,grams:300}]}]).calories,495);
   assert.equal(sumNutrition([{foods:[chicken,chicken]}]).calories,330);
+});
+test('entered calories replace only the logged portion energy while nutrients still follow weight',()=>{
+  const entered={...chicken,grams:50,caloriesOverride:200};
+  assert.deepEqual(sumNutrition([{foods:[entered]}]),{
+    calories:200,protein:15.5,carbs:0,fat:1.8,fiber:0,sodium:0,
+  });
+  assert.equal(sumNutrition([{foods:[entered,chicken]}]).calories,365);
+  assert.equal(sumNutrition([{foods:[{...entered,caloriesOverride:0}]}]).calories,0);
+  assert.equal(sumNutrition([{foods:[{...entered,caloriesOverride:''}]}]).calories,82.5);
 });
 test('replacement is idempotent; different days are isolated',()=>{
   const j=emptyJournal();j.days['2026-09-30']={meals:[{foods:[chicken]}]};
@@ -120,7 +129,21 @@ test('intake target stays at BMR times activity while balance goal follows train
   assert.ok(dailyEnergy(p,'Fitness',{strengthSession:strength}).total>dailyEnergy(p,'Rest').total);
   const saved={...emptyJournal(),profile:{...p,maintenanceCalories:2800}};
   assert.equal(planFor(validateJournal(JSON.parse(JSON.stringify(saved))).profile).calories,2556);
-  for(const patch of [{age:17},{eligible:false},{weight:''},{sex:''},{weight:40},{activityBasis:undefined}])assert.equal(planFor({...p,...patch}),null);
+  for(const patch of [{age:14},{age:51},{eligible:false},{weight:''},{sex:''},{weight:29},{activityBasis:undefined}])assert.equal(planFor({...p,...patch}),null);
+  assert.ok(planFor({...p,weight:40}));
+});
+test('intake minus burn is visible from the available daily burn before a workout is logged',()=>{
+  const profile={weight:70,height:175,age:30,sex:'male',activity:1.55,activityBasis:'nonExercise',goal:'lose',eligible:true};
+  const energy=dailyEnergy(profile,'Fitness');
+  assert.equal(energy.complete,false);
+  assert.equal(energy.total,2267);
+  assert.equal(dailyBalance(300,energy,{intakeKnown:true}),-1967);
+  assert.equal(dailyBalance(300,energy,{intakeKnown:false}),null);
+  assert.equal(dailyBalance(300,energy,{intakeKnown:true,caloriesIncomplete:true}),null);
+  assert.equal(dailyBalance(300,{total:null},{intakeKnown:true}),null);
+  const strength=makeSession('strength',{Duration:60},3.5,70);
+  const afterTraining=dailyEnergy(profile,'Fitness',{strengthSession:strength});
+  assert.equal(dailyBalance(300,afterTraining,{intakeKnown:true}),300-afterTraining.total);
 });
 test('daily energy keeps strength and sports mutually exclusive and adds cardio only on fitness days',()=>{
   const profile={weight:70,height:175,age:30,sex:'male',activity:1.2,activityBasis:'nonExercise',goal:'recomp',eligible:true};
@@ -174,6 +197,17 @@ test('backup roundtrip and invalid formats',()=>{
   assert.doesNotThrow(()=>validateJournal({...emptyJournal(),profile:{activity:1.375}}));
   assert.throws(()=>validateJournal({...emptyJournal(),profile:{activity:1.375,activityBasis:'includesExercise'}}));
 });
+test('backup keeps optional portion calories and rejects invalid overrides',()=>{
+  const food={...chicken,grams:50,caloriesOverride:200};
+  const day={meals:['breakfast','lunch','dinner'].map(id=>({id,name:id,foods:id==='breakfast'?[food]:[]}))};
+  const saved=validateJournal({...emptyJournal(),days:{'2026-11-04':day}});
+  assert.equal(saved.days['2026-11-04'].meals[0].foods[0].caloriesOverride,200);
+  assert.equal(saved.days['2026-11-04'].meals[0].calories,200);
+  for(const invalid of [-1,50001,'  ',Infinity]){
+    const bad={...emptyJournal(),days:{'2026-11-04':{meals:day.meals.map(meal=>({...meal,foods:meal.id==='breakfast'?[{...food,caloriesOverride:invalid}]:[]}))}}};
+    assert.throws(()=>validateJournal(bad));
+  }
+});
 test('streak crosses month and year boundaries; no fake initial streak',()=>{
   const j=emptyJournal();assert.equal(trainingStreak(j,'2026-09-30'),0);
   j.days['2026-12-31']={strengthSession:{duration:20}};j.days['2027-01-01']={cardioRecords:{run:{duration:30}}};
@@ -208,13 +242,13 @@ test('incline uses slope bands; unsupported combinations have no estimate',()=>{
 test('personal defaults are male and recomposition without inventing an exact age',()=>{
   const defaults=withProfileDefaults({});
   assert.equal(defaults.sex,'male');assert.equal(defaults.goal,'recomp');
-  assert.equal(defaults.ageRange,'18-20');assert.equal(defaults.age,'');
+  assert.equal(defaults.ageRange,'15-50');assert.equal(defaults.age,'');
   assert.equal(planFor({...defaults,weight:70,height:175,activity:1.55,eligible:true}),null);
   const existing={sex:'female',goal:'maintain',age:25};
   assert.equal(withProfileDefaults(existing).sex,'female');assert.equal(withProfileDefaults(existing).goal,'maintain');assert.equal(withProfileDefaults(existing).age,25);
 });
-test('recomposition starts at maintenance with weight-based protein for ages 18â€“20',()=>{
-  for(const age of [18,19,20]){
+test('the same formula calculates ages 15 through 50 and preserves old backups',()=>{
+  for(const age of [15,17,18,19,20,50]){
     const profile={...withProfileDefaults({}),age,weight:70,height:175,activity:1.55,activityBasis:'nonExercise',eligible:true};
     const plan=planFor(profile);
     assert.ok(plan);assert.equal(plan.calories,plan.maintenance);assert.equal(plan.protein,112);
@@ -222,5 +256,7 @@ test('recomposition starts at maintenance with weight-based protein for ages 18â
     const journal=emptyJournal();journal.profile=profile;
     assert.equal(validateJournal(JSON.parse(JSON.stringify(journal))).profile.age,age);
   }
-  assert.equal(planFor({...withProfileDefaults({}),age:17,weight:70,height:175,activity:1.55,eligible:true}),null);
+  for(const age of [14,51])assert.equal(planFor({...withProfileDefaults({}),age,weight:70,height:175,activity:1.55,eligible:true}),null);
+  assert.doesNotThrow(()=>validateJournal({...emptyJournal(),profile:{...emptyJournal().profile,ageRange:'18-20'}}));
+  assert.doesNotThrow(()=>validateJournal({...emptyJournal(),profile:{...emptyJournal().profile,age:64,ageRange:'18-20'}}));
 });
